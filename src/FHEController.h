@@ -139,13 +139,14 @@ public:
     Ctxt eval_inverse_naive(const Ctxt& c, double min, double max);
     Ctxt eval_inverse_naive_2(const Ctxt& c, double min, double max, double mult);
     Ctxt eval_gelu_function(const Ctxt& c, double min, double max, double mult, int degree);
+    Ctxt eval_tanh_function(const Ctxt& c, double min, double max, double mult, int degree);
 
     vector<Ctxt> slicing(vector<Ctxt> &arr, int X, int Y);
 
     void save(Ctxt v, string filename);
     void save(vector<Ctxt> v, string filename);
     vector<Ctxt> load_vector(string filename);
-
+    Ctxt load_ciphertext(string filename);
 
     int relu_degree = 119;
     string parameters_folder = "keys";

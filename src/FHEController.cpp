@@ -1274,6 +1274,10 @@ Ctxt FHEController::eval_gelu_function(const Ctxt &c, double min, double max, do
     return context->EvalChebyshevFunction([mult](double x) -> double { return  (0.5 * (x * (1 / mult)) * (1 + erf((x * (1 / mult)) / 1.41421356237))); }, c, min, max, degree);
 }
 
+Ctxt FHEController::eval_tanh_function(const Ctxt &c, double min, double max, double mult, int degree) {
+    return context->EvalChebyshevFunction([mult](double x) -> double { return tanh(x * (1 / mult)); }, c, min, max, degree);
+}
+
 vector<Ctxt> FHEController::slicing(vector<Ctxt> &arr, int X, int Y) {
     if (Y - X >= arr.size())
         return arr;
@@ -1305,6 +1309,19 @@ void FHEController::save(vector<Ctxt> v, std::string filename) {
 
 vector<Ctxt> FHEController::load_vector(string filename) {
     vector<Ctxt> result;
+
+    if (!Serial::DeserializeFromFile(filename, result,
+                                     SerType::BINARY)) {
+        cerr << "Could not find \"" << filename << "\""
+             << endl;
+
+    }
+
+    return result;
+}
+
+Ctxt FHEController::load_ciphertext(string filename) {
+    Ctxt result;
 
     if (!Serial::DeserializeFromFile(filename, result,
                                      SerType::BINARY)) {
