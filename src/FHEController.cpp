@@ -10,10 +10,10 @@ void FHEController::generate_context(bool serialize) {
     num_slots = 1 << 14;
 
     parameters.SetSecretKeyDist(SPARSE_TERNARY);
-   // parameters.SetSecurityLevel(lbcrypto::HEStd_128_classic);
+    parameters.SetSecurityLevel(lbcrypto::HEStd_128_classic);
     parameters.SetSecurityLevel(lbcrypto::HEStd_NotSet);
-    parameters.SetNumLargeDigits(3); //d_{num} Se lo riduci, aumenti il logQP, se lo aumenti, aumenti memori
-    //parameters.SetRingDim(1 << 16);
+    parameters.SetNumLargeDigits(4); //d_{num} Se lo riduci, aumenti il logQP, se lo aumenti, aumenti memori
+    parameters.SetRingDim(1 << 16);
     parameters.SetRingDim(1 << 15);
     parameters.SetBatchSize(num_slots);
 
@@ -21,8 +21,8 @@ void FHEController::generate_context(bool serialize) {
 
     ScalingTechnique rescaleTech = FLEXIBLEAUTO;
 
-    int dcrtBits               = 59;
-    int firstMod               = 60;
+    int dcrtBits               = 52;
+    int firstMod               = 55;
 
     parameters.SetScalingModSize(dcrtBits);
     parameters.SetScalingTechnique(rescaleTech);
@@ -442,7 +442,7 @@ Ctxt FHEController::rotate(const Ctxt &c, int index) {
 }
 
 Ctxt FHEController::bootstrap(const Ctxt &c, bool timing) {
-    if (static_cast<int>(c->GetLevel()) + 2 < circuit_depth && timing) {
+    if (static_cast<int>(c->GetLevel()) + 2 < circuit_depth) {
         cout << "You are bootstrapping with remaining levels! You are at " << to_string(c->GetLevel()) << "/" << circuit_depth - 2 << endl;
     }
 

@@ -13,15 +13,15 @@ Ctxt pooler(Ctxt input);
 Ctxt classifier(Ctxt input);
 
 string input_folder;
-bool verbose = false;
+bool verbose = true;
 
 int main() {
     Parameters p = Parameters::Load;
 
     if (p == Parameters::Generate) {
-        controller.generate_context(true);
+        controller.generate_context(false);
         vector<int> rotations = {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, -1, -2, -4, -8, -16, -32, -64};
-        controller.generate_bootstrapping_and_rotation_keys(rotations, 16384, true, "rotation_keys.txt");
+        controller.generate_bootstrapping_and_rotation_keys(rotations, 16384, false, "rotation_keys.txt");
     } else if (p == Parameters::Load) {
         controller.load_context(false);
         controller.load_bootstrapping_and_rotation_keys("rotation_keys.txt", 16384, false);
@@ -40,7 +40,7 @@ int main() {
     vector<Ctxt> encoder1output;
     Ctxt encoder2output;
 
-    encoder1output = encoder1();
+    //encoder1output = encoder1();
     encoder1output = controller.load_vector("../checkpoint/encoder1output.bin");
 
     encoder2output = encoder2(encoder1output);
@@ -129,7 +129,8 @@ Ctxt encoder2(vector<Ctxt> inputs) {
 
     Ctxt scores = controller.matmulScores(Q, K_wrapped);
 
-    //scores = controller.bootstrap(scores);
+    scores = controller.bootstrap(scores);
+
     scores = controller.eval_exp(scores, inputs.size());
 
     scores = controller.mult(scores, 1 / 100.0);
@@ -156,7 +157,7 @@ Ctxt encoder2(vector<Ctxt> inputs) {
     vector<Ctxt> output = controller.matmulRE(unwrapped_scores, V_wrapped, 128, 128);
 
     if (verbose) cout << "The evaluation of Self-Attention took: " << (duration_cast<milliseconds>( high_resolution_clock::now() - start)).count() / 1000.0 << " seconds." << endl;
-    if (verbose) controller.print(controller.wrapUpRepeated(output), 128, "Self-Attention (Repeated)");
+    if (verbose) controller.print(output[0], 128, "Self-Attention (Repeated)");
     //Qua la precisione è 0.9868
 
     /*
@@ -178,22 +179,23 @@ Ctxt encoder2(vector<Ctxt> inputs) {
     }
 
     Ctxt wrappedOutput = controller.wrapUpExpanded(output);
+
     Ptxt precomputed_mean = controller.read_plain_repeated_input("../weights-sst2/layer1_selfoutput_mean.txt", wrappedOutput->GetLevel(), -1);
     wrappedOutput = controller.add(wrappedOutput, precomputed_mean);
+
+    wrappedOutput = controller.bootstrap(wrappedOutput);
 
     Ptxt vy = controller.read_plain_input("../weights-sst2/layer1_selfoutput_vy.txt", wrappedOutput->GetLevel(), 1);
     wrappedOutput = controller.mult(wrappedOutput, vy);
     Ptxt bias = controller.read_plain_expanded_input("../weights-sst2/layer1_selfoutput_normbias.txt", wrappedOutput->GetLevel(), 1, inputs.size());
     wrappedOutput = controller.add(wrappedOutput, bias);
 
-    wrappedOutput = controller.bootstrap(wrappedOutput);
-
     Ctxt output_copy = wrappedOutput->Clone(); //Required at the last layernorm
 
     output = controller.unwrapExpanded(wrappedOutput, inputs.size());
 
     if (verbose) cout << "The evaluation of Self-Output took: " << (duration_cast<milliseconds>( high_resolution_clock::now() - start)).count() / 1000.0 << " seconds." << endl;
-    if (verbose) controller.print_expanded(wrappedOutput, 0, 128, "Self-Output (Expanded)");
+    if (verbose) controller.print_expanded(output[0], 0, 128, "Self-Output (Expanded)");
     //Fino a qui ottengo precisione 0.9828
 
 
@@ -215,7 +217,8 @@ Ctxt encoder2(vector<Ctxt> inputs) {
     output = controller.generate_containers(output, intermediate_bias);
 
     for (int i = 0; i < output.size(); i++) {
-        output[i] = controller.eval_gelu_function(output[i], -1, 1, GELU_max_abs_value, 119);
+        cout << "Prima di GELU sono al " << output[i]->GetLevel() << endl;
+        output[i] = controller.eval_gelu_function(output[i], -1, 1, GELU_max_abs_value, 59);
         output[i] = controller.bootstrap(output[i]);
     }
 
@@ -305,7 +308,7 @@ vector<Ctxt> encoder1() {
     vector<Ctxt> output = controller.matmulRE(unwrapped_scores, V_wrapped, 128, 128);
 
     if (verbose) cout << "The evaluation of Self-Attention took: " << (duration_cast<milliseconds>( high_resolution_clock::now() - start)).count() / 1000.0 << " seconds." << endl;
-    if (verbose) controller.print(controller.wrapUpRepeated(output), 128, "Self-Attention (Repeated)");
+    if (verbose) controller.print(output[0], 128, "Self-Attention (Repeated)");
     //Fino a qui ottengo precisione 0.9934
 
     start = high_resolution_clock::now();
@@ -320,7 +323,6 @@ vector<Ctxt> encoder1() {
     }
 
     Ctxt wrappedOutput = controller.wrapUpExpanded(output);
-    wrappedOutput = controller.bootstrap(wrappedOutput);
 
     Ptxt precomputed_mean = controller.read_plain_repeated_input("../weights-sst2/layer0_selfoutput_mean.txt", wrappedOutput->GetLevel(), -1);
     wrappedOutput = controller.add(wrappedOutput, precomputed_mean);
@@ -329,6 +331,8 @@ vector<Ctxt> encoder1() {
     wrappedOutput = controller.mult(wrappedOutput, vy);
     Ptxt bias = controller.read_plain_expanded_input("../weights-sst2/layer0_selfoutput_normbias.txt", wrappedOutput->GetLevel(), 1, inputs.size());
     wrappedOutput = controller.add(wrappedOutput, bias);
+
+    wrappedOutput = controller.bootstrap(wrappedOutput);
 
     Ctxt output_copy = wrappedOutput->Clone(); //Required at the last layernorm
 
@@ -356,7 +360,7 @@ vector<Ctxt> encoder1() {
     output = controller.generate_containers(output, intermediate_bias);
 
     for (int i = 0; i < output.size(); i++) {
-        output[i] = controller.eval_gelu_function(output[i], -1, 1, GELU_max_abs_value, 59);
+        output[i] = controller.eval_gelu_function(output[i], -1, 1, GELU_max_abs_value, 119);
         output[i] = controller.bootstrap(output[i]);
     }
 
@@ -386,12 +390,10 @@ vector<Ctxt> encoder1() {
     bias = controller.read_plain_expanded_input("../weights-sst2/layer0_output_normbias.txt", wrappedOutput->GetLevel(), 1, inputs.size());
     wrappedOutput = controller.add(wrappedOutput, bias);
 
-    wrappedOutput = controller.bootstrap(wrappedOutput);
-
     output = controller.unwrapExpanded(wrappedOutput, inputs.size());
 
     if (verbose) cout << "The evaluation of Output took: " << (duration_cast<milliseconds>( high_resolution_clock::now() - start)).count() / 1000.0 << " seconds." << endl;
-    if (verbose) controller.print_expanded(wrappedOutput, 0, 128,"Output (Expanded)");
+    if (verbose) controller.print_expanded(output[0], 0, 128,"Output (Expanded)");
     //Fino a qui ottengo precisione 0.9965
 
     controller.save(output, "../checkpoint/encoder1output.bin");
