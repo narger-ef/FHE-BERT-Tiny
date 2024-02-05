@@ -91,6 +91,7 @@ public:
     Ctxt read_expanded_input(const string& filename, double scale = 1);
 
     Ptxt read_plain_input(const string& filename, int level = 0, double scale = 1);
+    //Ptxt read_plain_512_input(const string& filename, int level = 0, double scale = 1);
     Ptxt read_plain_repeated_input(const string& filename, int level = 0, double scale = 1);
     Ptxt read_plain_repeated_512_input(const string& filename, int level = 0, double scale = 1);
     Ptxt read_plain_expanded_input(const string& filename, int level = 0, double scale = 1);

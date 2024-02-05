@@ -12,7 +12,7 @@ void FHEController::generate_context(bool serialize) {
     parameters.SetSecretKeyDist(SPARSE_TERNARY);
     parameters.SetSecurityLevel(lbcrypto::HEStd_128_classic);
     parameters.SetSecurityLevel(lbcrypto::HEStd_NotSet);
-    parameters.SetNumLargeDigits(4); //d_{num} Se lo riduci, aumenti il logQP, se lo aumenti, aumenti memori
+    parameters.SetNumLargeDigits(3); //d_{num} Se lo riduci, aumenti il logQP, se lo aumenti, aumenti memori
     parameters.SetRingDim(1 << 16);
     parameters.SetRingDim(1 << 15);
     parameters.SetBatchSize(num_slots);
@@ -442,10 +442,9 @@ Ctxt FHEController::rotate(const Ctxt &c, int index) {
 }
 
 Ctxt FHEController::bootstrap(const Ctxt &c, bool timing) {
-    if (static_cast<int>(c->GetLevel()) + 2 < circuit_depth) {
-        cout << "You are bootstrapping with remaining levels! You are at " << to_string(c->GetLevel()) << "/" << circuit_depth - 2 << endl;
-    }
-
+    //if (static_cast<int>(c->GetLevel()) + 2 < circuit_depth) {
+    //    cout << "You are bootstrapping with remaining levels! You are at " << to_string(c->GetLevel()) << "/" << circuit_depth - 2 << endl;
+    //}
 
     auto start = start_time();
 
@@ -938,6 +937,8 @@ vector<Ctxt> FHEController::matmulRElarge(vector<Ctxt>& inputs, const vector<Ptx
 
         }
 
+        i_th_result = add(i_th_result, bias);
+
         densed.push_back(i_th_result);
     }
 
@@ -1130,7 +1131,8 @@ vector<Ctxt> FHEController::generate_containers(vector<Ctxt> inputs, const Ptxt&
     vector<Ctxt> containers;
     vector<int> quantities;
 
-    reverse(inputs.begin(), inputs.end());
+    //This reverse is not fine
+    //reverse(inputs.begin(), inputs.end());
 
     for (int i = 0; i < inputs.size() / 32.0; i++) {
         int quantity = 32;
@@ -1140,8 +1142,13 @@ vector<Ctxt> FHEController::generate_containers(vector<Ctxt> inputs, const Ptxt&
 
         quantities.push_back(quantity);
 
-        Ctxt partial_container = wrap_containers(slicing(inputs, (i) * 32, (i + 1) * 32), quantity);
-        partial_container = add(partial_container, bias);
+        vector<Ctxt> sliced_input = slicing(inputs, (i) * 32, (i + 1) * 32);
+        reverse(sliced_input.begin(), sliced_input.end());
+
+        Ctxt partial_container = wrap_containers( sliced_input, quantity);
+
+        if (bias != nullptr) partial_container = add(partial_container, bias);
+
         containers.push_back(partial_container);
     }
 
@@ -1151,6 +1158,7 @@ vector<Ctxt> FHEController::generate_containers(vector<Ctxt> inputs, const Ptxt&
 Ctxt FHEController::wrap_containers(vector<Ctxt> c, int inputs_number) {
     //Resulting Ctxt will contain all the ciphertexts as follows:
     //c_n | c_n-1 | c_n-2 | ... | c_0
+
     Ctxt result = c[0];
 
     for (int i = 1; i < inputs_number; i++) {
@@ -1282,6 +1290,10 @@ vector<Ctxt> FHEController::slicing(vector<Ctxt> &arr, int X, int Y) {
     if (Y - X >= arr.size())
         return arr;
 
+    if (Y > arr.size()) {
+        Y = arr.size();
+    }
+
     // Starting and Ending iterators
     auto start = arr.begin() + X;
     auto end = arr.begin() + Y;
@@ -1289,7 +1301,6 @@ vector<Ctxt> FHEController::slicing(vector<Ctxt> &arr, int X, int Y) {
     // To store the sliced vector
     vector<Ctxt> result(Y - X);
 
-    // Copy vector using copy function()
     copy(start, end, result.begin());
 
     // Return the final sliced vector

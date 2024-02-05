@@ -5,6 +5,8 @@ using namespace std::chrono;
 
 enum class Parameters { Generate, Load };
 
+void setup_environment(int argc, char *argv[]);
+
 FHEController controller;
 
 vector<Ctxt> encoder1();
@@ -12,10 +14,20 @@ Ctxt encoder2(vector<Ctxt> input);
 Ctxt pooler(Ctxt input);
 Ctxt classifier(Ctxt input);
 
-string input_folder;
-bool verbose = true;
+bool IDE_MODE = false;
 
-int main() {
+string input_folder;
+
+//Argument
+string text;
+
+//<OPTIONS>
+bool verbose = false;
+bool security128bits = false;
+
+int main(int argc, char *argv[]) {
+    setup_environment(argc, argv);
+
     Parameters p = Parameters::Load;
 
     if (p == Parameters::Generate) {
@@ -27,20 +39,21 @@ int main() {
         controller.load_bootstrapping_and_rotation_keys("rotation_keys.txt", 16384, false);
     }
 
-    cout << "The evaluation of the circuit started." << endl << endl;
+    cout << "\nSERVER-SIDE\nThe evaluation of the circuit started." << endl;
 
     auto start = high_resolution_clock::now();
 
     //al 24 si bootstrappa
 
     if (input_folder.empty()) {
-        input_folder = "../src/embeddings/";
+        cerr << "The input folder \"" << input_folder << "\" is empty!";
+        exit(1);
     }
 
     vector<Ctxt> encoder1output;
     Ctxt encoder2output;
 
-    //encoder1output = encoder1();
+    encoder1output = encoder1();
     encoder1output = controller.load_vector("../checkpoint/encoder1output.bin");
 
     encoder2output = encoder2(encoder1output);
@@ -51,20 +64,23 @@ int main() {
 
     Ctxt classified = classifier(pooled);
 
-    controller.print(classified, 2, "Output logits");
+    cout << "The circuit has been evaluated, the results are sent back to the client" << endl << endl;
+    cout << "CLIENT-SIDE" << endl;
 
-    cout << "Return back the logits to the client" << endl;
+    if (verbose) controller.print(classified, 2, "Output logits");
 
     vector<double> plain_result = controller.decrypt_tovector(classified, 2);
 
-    cout << "Result: ";
+    cout << "Outcomes:" << endl << "FHE              : ";
     if (plain_result[0] > plain_result[1]){
-        cout << "negative sentiment!" << endl << endl;
+        cout << "negative sentiment!" << endl;
     } else {
-        cout << "positive sentiment!" << endl << endl;
+        cout << "positive sentiment!" << endl;
     }
 
-    cout << "The whole thing took: " << (duration_cast<milliseconds>( high_resolution_clock::now() - start)).count() / 1000.0 << " seconds." << endl;
+    system(("python3 ../src/PlainCircuit.py \"" + text + "\"").c_str());
+
+    cout << endl << "The whole thing took: " << (duration_cast<milliseconds>( high_resolution_clock::now() - start)).count() / 1000.0 << " seconds." << endl;
 
 }
 
@@ -92,8 +108,9 @@ Ctxt classifier(Ctxt input) {
 
     return output;
 }
-
 Ctxt pooler(Ctxt input) {
+    auto start = high_resolution_clock::now();
+
     double tanhScale = 1 / 30.0;
 
     Ptxt weight = controller.read_plain_input("../weights-sst2/pooler_dense_weight.txt", input->GetLevel(), tanhScale);
@@ -109,11 +126,13 @@ Ctxt pooler(Ctxt input) {
 
     output = controller.eval_tanh_function(output, -1, 1, tanhScale, 300);
 
+    if (verbose) cout << "The evaluation of Pooler took: " << (duration_cast<milliseconds>( high_resolution_clock::now() - start)).count() / 1000.0 << " seconds." << endl;
+    if (verbose) controller.print(output, 128, "Pooler (Repeated)");
+
     controller.save(output, "../checkpoint/pooled.bin");
 
     return output;
 }
-
 Ctxt encoder2(vector<Ctxt> inputs) {
     auto start = high_resolution_clock::now();
 
@@ -133,13 +152,15 @@ Ctxt encoder2(vector<Ctxt> inputs) {
 
     scores = controller.eval_exp(scores, inputs.size());
 
-    scores = controller.mult(scores, 1 / 100.0);
+    scores = controller.mult(scores, 1 / 500.0); //Here values are scaled down in order to achieve better accuracy with bootstrapping
     scores = controller.bootstrap(scores);
-    scores = controller.mult(scores, 100.0);
+    scores = controller.mult(scores, 500.0);
 
     Ctxt scores_sum = controller.rotsum(scores, 128, 128);
 
-    Ctxt scores_denominator = controller.eval_inverse_naive_2(scores_sum, 4, 200000, 1);
+    controller.print_min_max(scores_sum);
+
+    Ctxt scores_denominator = controller.eval_inverse_naive_2(scores_sum, 3, 145000, 1);
 
     scores_denominator = controller.bootstrap(scores_denominator);
 
@@ -201,7 +222,7 @@ Ctxt encoder2(vector<Ctxt> inputs) {
 
     start = high_resolution_clock::now();
 
-    double GELU_max_abs_value = 1 / 16.0;
+    double GELU_max_abs_value = 1 / 17.0;
 
     Ptxt intermediate_w_1 = controller.read_plain_input("../weights-sst2/layer1_intermediate_weight1.txt", wrappedOutput->GetLevel(), GELU_max_abs_value);
     Ptxt intermediate_w_2 = controller.read_plain_input("../weights-sst2/layer1_intermediate_weight2.txt", wrappedOutput->GetLevel(), GELU_max_abs_value);
@@ -210,14 +231,13 @@ Ctxt encoder2(vector<Ctxt> inputs) {
 
     vector<Ptxt> dense_weights = {intermediate_w_1, intermediate_w_2, intermediate_w_3, intermediate_w_4};
 
-    output = controller.matmulRElarge(output, dense_weights, nullptr);
+    Ptxt intermediate_bias = controller.read_plain_input("../weights-sst2/layer1_intermediate_bias.txt", output[0]->GetLevel() + 1, GELU_max_abs_value);
 
-    Ptxt intermediate_bias = controller.read_plain_repeated_512_input("../weights-sst2/layer1_intermediate_bias.txt", output[0]->GetLevel(), GELU_max_abs_value);
+    output = controller.matmulRElarge(output, dense_weights, intermediate_bias);
 
-    output = controller.generate_containers(output, intermediate_bias);
+    output = controller.generate_containers(output, nullptr);
 
     for (int i = 0; i < output.size(); i++) {
-        cout << "Prima di GELU sono al " << output[i]->GetLevel() << endl;
         output[i] = controller.eval_gelu_function(output[i], -1, 1, GELU_max_abs_value, 59);
         output[i] = controller.bootstrap(output[i]);
     }
@@ -252,14 +272,10 @@ Ctxt encoder2(vector<Ctxt> inputs) {
     if (verbose) cout << "The evaluation of Output took: " << (duration_cast<milliseconds>( high_resolution_clock::now() - start)).count() / 1000.0 << " seconds." << endl;
     if (verbose) controller.print_expanded(output[0], 0, 128, "Output (Expanded)");
 
-    //Precisione finale con approx: 0.9895
-    //Precisione finale con reale : 0.8589
-
     controller.save(output[0], "../checkpoint/encoder2output.bin");
 
     return output[0];
 }
-
 vector<Ctxt> encoder1() {
     auto start = high_resolution_clock::now();
 
@@ -344,7 +360,7 @@ vector<Ctxt> encoder1() {
 
     start = high_resolution_clock::now();
 
-    double GELU_max_abs_value = 1 / 14.0;
+    double GELU_max_abs_value = 1 / 13.5;
 
     Ptxt intermediate_w_1 = controller.read_plain_input("../weights-sst2/layer0_intermediate_weight1.txt", wrappedOutput->GetLevel(), GELU_max_abs_value);
     Ptxt intermediate_w_2 = controller.read_plain_input("../weights-sst2/layer0_intermediate_weight2.txt", wrappedOutput->GetLevel(), GELU_max_abs_value);
@@ -353,11 +369,11 @@ vector<Ctxt> encoder1() {
 
     vector<Ptxt> dense_weights = {intermediate_w_1, intermediate_w_2, intermediate_w_3, intermediate_w_4};
 
-    output = controller.matmulRElarge(output, dense_weights, nullptr);
+    Ptxt intermediate_bias = controller.read_plain_input("../weights-sst2/layer0_intermediate_bias.txt", output[0]->GetLevel() + 1, GELU_max_abs_value);
 
-    Ptxt intermediate_bias = controller.read_plain_repeated_512_input("../weights-sst2/layer0_intermediate_bias.txt", output[0]->GetLevel(), GELU_max_abs_value);
+    output = controller.matmulRElarge(output, dense_weights, intermediate_bias);
 
-    output = controller.generate_containers(output, intermediate_bias);
+    output = controller.generate_containers(output, nullptr);
 
     for (int i = 0; i < output.size(); i++) {
         output[i] = controller.eval_gelu_function(output[i], -1, 1, GELU_max_abs_value, 119);
@@ -401,4 +417,48 @@ vector<Ctxt> encoder1() {
     return output;
 }
 
+void setup_environment(int argc, char *argv[]) {
+    if (IDE_MODE) {
+        filesystem::remove_all("../src/tmp_embeddings");
+        system("mkdir ../src/tmp_embeddings");
 
+        input_folder = "../src/tmp_embeddings/";
+
+        text = "( lawrence bounces ) all over the stage , dancing , running , sweating , mopping his face and generally displaying the wacky talent that brought him fame in the first place . ";
+        cout << "\nCLIENT-SIDE\nTokenizing the following sentence: '" << text << "'" << endl;
+        string command = "python3 ../src/ExtractEmbeddings.py \"" + text + "\"";
+
+        system(command.c_str());
+
+        verbose = true;
+        return;
+    }
+
+    if (argc < 2) {
+        cout << "This is FHEBERT-Tiny, an encrypted text classifier based on BERT-tiny. It relies on the CKKS homomorphic encryption scheme.\n\nUsage: ./FHEBERT-tiny <text_input> [OPTIONS]\n\nthe following [OPTIONS] are available:\n--verbose: activates verbose mode\n--secure: creates parameters with 128 bits of security. Use only if necessary, as it adds computational overhead \n\nExample:\n./FHEBERT-tiny \"I wonder if this text will be well classified!\" --verbose\n";
+        exit(0);
+    } else {
+        text = argv[1];
+
+        //Removing any previous embedding
+        filesystem::remove_all("../src/tmp_embeddings");
+        system("mkdir ../src/tmp_embeddings");
+
+        input_folder = "../src/tmp_embeddings/";
+
+        cout << "\nCLIENT-SIDE\nTokenizing the following sentence: '" << text << "'" << endl;
+        string command = "python3 ../src/ExtractEmbeddings.py \"" + text + "\"";
+
+        system(command.c_str());
+
+        for (int i = 2; i < argc; i++) {
+            if (string(argv[i]) == "--verbose") {
+                verbose = true;
+            }
+            if (string(argv[i]) == "--secure") {
+                security128bits = true;
+            }
+        }
+    }
+
+}

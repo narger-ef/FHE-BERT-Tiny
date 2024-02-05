@@ -5,12 +5,17 @@ import numpy as np
 import shutil
 import os
 
+from transformers import logging
+logging.set_verbosity_error()
+
 tokenizer = AutoTokenizer.from_pretrained("prajjwal1/bert-tiny")
 model = AutoModelForSequenceClassification.from_pretrained("prajjwal1/bert-tiny")
 trained = torch.load('../notebooks/SST-2-BERT-tiny.bin', map_location=torch.device('cpu'))
 model.load_state_dict(trained, strict=True)
 model.eval()
+
 text = sys.argv[1]
+text = "[CLS] " + text + " [SEP]"
 
 tokenized = tokenizer(text)
 tokenized_text = tokenizer.tokenize(text)
@@ -21,6 +26,6 @@ x = model.bert.embeddings(tokens_tensor, torch.tensor([[1] * len(tokenized_text)
 
 #Export x
 for i in range(len(x[0])):
-    np.savetxt('embeddings/input_{}.txt'.format(i), x[0][i].detach(), delimiter=',')
+    np.savetxt('../src/tmp_embeddings/input_{}.txt'.format(i), x[0][i].detach(), delimiter=',')
 
-print("Embeddings saved in \"embeddings\" folder")
+print("Embeddings correctly saved in \"tmp_embeddings\" folder")
