@@ -67,7 +67,8 @@ int main(int argc, char *argv[]) {
     cout << "The circuit has been evaluated, the results are sent back to the client" << endl << endl;
     cout << "CLIENT-SIDE" << endl;
 
-    if (verbose) controller.print(classified, 2, "Output logits");
+    //if (verbose)
+        controller.print(classified, 2, "Output logits");
 
     vector<double> plain_result = controller.decrypt_tovector(classified, 2);
 
@@ -80,7 +81,11 @@ int main(int argc, char *argv[]) {
 
     system(("python3 ../src/PlainCircuit.py \"" + text + "\"").c_str());
 
-    cout << endl << "The whole thing took: " << (duration_cast<milliseconds>( high_resolution_clock::now() - start)).count() / 1000.0 << " seconds." << endl;
+    int timing = (duration_cast<milliseconds>( high_resolution_clock::now() - start)).count() / 1000.0;
+
+    system(("python3 ../src/Precision.py \"" + text + "\" " + "\"[" + to_string(plain_result[0]) + ", " + to_string(plain_result[1])  + "\" " + to_string(timing)).c_str());
+
+    cout << endl << "The whole thing took: " << timing << " seconds." << endl;
 
 }
 
