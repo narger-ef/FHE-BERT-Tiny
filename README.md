@@ -6,6 +6,10 @@ This repository contains the source code for the Work-in-Progress paper called *
 
 WIP
 
+## How to use it
+
+WIP
+
 ## Authors
 
 - Lorenzo Rovida (`lorenzo.rovida@unimib.it`)
