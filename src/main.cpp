@@ -1,6 +1,7 @@
 #include <iostream>
 #include "FHEController.h"
 #include <chrono>
+
 using namespace std::chrono;
 
 enum class Parameters { Generate, Load };
@@ -14,6 +15,7 @@ Ctxt encoder2(vector<Ctxt> input);
 Ctxt pooler(Ctxt input);
 Ctxt classifier(Ctxt input);
 
+//Set to True to test the program on the IDE
 bool IDE_MODE = false;
 
 string input_folder;
@@ -24,26 +26,28 @@ string text;
 //<OPTIONS>
 bool verbose = false;
 bool security128bits = false;
+Parameters p = Parameters::Load;
+bool plain;
 
 int main(int argc, char *argv[]) {
     setup_environment(argc, argv);
 
-    Parameters p = Parameters::Load;
-
     if (p == Parameters::Generate) {
-        controller.generate_context(false);
+        system("mkdir -p ../keys");
+        controller.generate_context(true, security128bits);
         vector<int> rotations = {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, -1, -2, -4, -8, -16, -32, -64};
-        controller.generate_bootstrapping_and_rotation_keys(rotations, 16384, false, "rotation_keys.txt");
+        controller.generate_bootstrapping_and_rotation_keys(rotations, 16384, true, "rotation_keys.txt");
+        return 0;
     } else if (p == Parameters::Load) {
         controller.load_context(false);
         controller.load_bootstrapping_and_rotation_keys("rotation_keys.txt", 16384, false);
     }
 
-    cout << "\nSERVER-SIDE\nThe evaluation of the circuit started." << endl;
+    system("mkdir -p ../checkpoint");
+
+    if (verbose) cout << "\nSERVER-SIDE\nThe evaluation of the circuit started." << endl;
 
     auto start = high_resolution_clock::now();
-
-    //al 24 si bootstrappa
 
     if (input_folder.empty()) {
         cerr << "The input folder \"" << input_folder << "\" is empty!";
@@ -64,28 +68,36 @@ int main(int argc, char *argv[]) {
 
     Ctxt classified = classifier(pooled);
 
-    cout << "The circuit has been evaluated, the results are sent back to the client" << endl << endl;
-    cout << "CLIENT-SIDE" << endl;
+    if (verbose) cout << "The circuit has been evaluated, the results are sent back to the client" << endl << endl;
+    if (verbose) cout << "CLIENT-SIDE" << endl;
 
-    //if (verbose)
+    if (verbose)
         controller.print(classified, 2, "Output logits");
 
     vector<double> plain_result = controller.decrypt_tovector(classified, 2);
 
-    cout << "Outcomes:" << endl << "FHE              : ";
-    if (plain_result[0] > plain_result[1]){
-        cout << "negative sentiment!" << endl;
+    int timing = (duration_cast<milliseconds>( high_resolution_clock::now() - start)).count() / 1000.0;
+    cout << endl << "The evaluation of the FHE circuit took: " << timing << " seconds." << endl;
+
+    if (plain) {
+        cout << "Outcomes:" << endl << "FHE              : ";
+        if (plain_result[0] > plain_result[1]){
+            cout << "negative sentiment!" << endl;
+        } else {
+            cout << "positive sentiment!" << endl;
+        }
+        system(("python3 ../src/PlainCircuit.py \"" + text + "\"").c_str());
+        system(("python3 ../src/Precision.py \"" + text + "\" " + "\"[" + to_string(plain_result[0]) + ", " +
+                to_string(plain_result[1]) + "\" " + to_string(timing)).c_str());
     } else {
-        cout << "positive sentiment!" << endl;
+        cout << "Outcome: ";
+        if (plain_result[0] > plain_result[1]){
+            cout << "negative sentiment!" << endl;
+        } else {
+            cout << "positive sentiment!" << endl;
+        }
     }
 
-    system(("python3 ../src/PlainCircuit.py \"" + text + "\"").c_str());
-
-    int timing = (duration_cast<milliseconds>( high_resolution_clock::now() - start)).count() / 1000.0;
-
-    system(("python3 ../src/Precision.py \"" + text + "\" " + "\"[" + to_string(plain_result[0]) + ", " + to_string(plain_result[1])  + "\" " + to_string(timing)).c_str());
-
-    cout << endl << "The whole thing took: " << timing << " seconds." << endl;
 
 }
 
@@ -443,16 +455,25 @@ void setup_environment(int argc, char *argv[]) {
         cout << "This is FHEBERT-Tiny, an encrypted text classifier based on BERT-tiny. It relies on the CKKS homomorphic encryption scheme.\n\nUsage: ./FHEBERT-tiny <text_input> [OPTIONS]\n\nthe following [OPTIONS] are available:\n--verbose: activates verbose mode\n--secure: creates parameters with 128 bits of security. Use only if necessary, as it adds computational overhead \n\nExample:\n./FHEBERT-tiny \"I wonder if this text will be well classified!\" --verbose\n";
         exit(0);
     } else {
+        if (string(argv[1]) == "--generate_keys")
+        {
+            if (argc > 2 && string(argv[2]) == "--secure") {
+                security128bits = true;
+            }
+
+            p = Parameters::Generate;
+            return;
+        }
+
         text = argv[1];
 
         //Removing any previous embedding
-        filesystem::remove_all("../src/tmp_embeddings");
+        filesystem::remove_all("../src/tmp_embeddings/");
         system("mkdir ../src/tmp_embeddings");
 
         input_folder = "../src/tmp_embeddings/";
 
-        cout << "\nCLIENT-SIDE\nTokenizing the following sentence: '" << text << "'" << endl;
-        string command = "python3 ../src/ExtractEmbeddings.py \"" + text + "\"";
+
 
         system(command.c_str());
 
@@ -460,10 +481,14 @@ void setup_environment(int argc, char *argv[]) {
             if (string(argv[i]) == "--verbose") {
                 verbose = true;
             }
-            if (string(argv[i]) == "--secure") {
-                security128bits = true;
+
+            if (string(argv[i]) == "--plain") {
+                plain = true;
             }
         }
+
+        if (verbose) cout << "\nCLIENT-SIDE\nTokenizing the following sentence: '" << text << "'" << endl;
+        string command = "python3 ../src/ExtractEmbeddings.py \"" + text + "\"";
     }
 
 }

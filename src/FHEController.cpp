@@ -4,14 +4,14 @@
 
 #include "FHEController.h"
 
-void FHEController::generate_context(bool serialize) {
+void FHEController::generate_context(bool serialize, bool secure) {
     CCParams<CryptoContextCKKSRNS> parameters;
 
     num_slots = 1 << 14;
 
     parameters.SetSecretKeyDist(SPARSE_TERNARY);
     parameters.SetSecurityLevel(lbcrypto::HEStd_128_classic);
-    parameters.SetSecurityLevel(lbcrypto::HEStd_NotSet);
+    if (!secure) parameters.SetSecurityLevel(lbcrypto::HEStd_NotSet);
     parameters.SetNumLargeDigits(3); //d_{num} Se lo riduci, aumenti il logQP, se lo aumenti, aumenti memori
     parameters.SetRingDim(1 << 16);
     parameters.SetRingDim(1 << 15);
@@ -510,7 +510,7 @@ Ctxt FHEController::relu_wide(const Ctxt &c, double a, double b, int degree, dou
     context->Decrypt(key_pair.secretKey, c, &result);
     vector<double> v = result->GetRealPackedValue();
 
-    cout << "min: " << *min_element(v.begin(), v.end()) << ", max: " << *max_element(v.begin(), v.end()) << endl;
+    //cout << "min: " << *min_element(v.begin(), v.end()) << ", max: " << *max_element(v.begin(), v.end()) << endl;
     /*
      * Max min
      */

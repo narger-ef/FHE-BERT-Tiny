@@ -28,4 +28,4 @@ x = model.bert.embeddings(tokens_tensor, torch.tensor([[1] * len(tokenized_text)
 for i in range(len(x[0])):
     np.savetxt('../src/tmp_embeddings/input_{}.txt'.format(i), x[0][i].detach(), delimiter=',')
 
-print("{} embeddings correctly saved in \"tmp_embeddings\" folder".format(len(x[0])))
+#print("{} embeddings correctly saved in \"tmp_embeddings\" folder".format(len(x[0])))
