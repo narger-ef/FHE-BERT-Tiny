@@ -47,4 +47,4 @@ Thumbs.db
 /checkpoint
 checkpoint/
 
-src/tmp_embeddings
+src/tmp_embeddings/
