@@ -71,8 +71,9 @@ The circuit is built to be run by a honest-but-curious server, and it is evaluat
 Find more details on the paper, currently WIP
 
 ## Some results
+We present some results, obtained by taking sentences from the validation set of SST-2
 
-|sentence                                                                                                                                                                                               |tokens|neuron distance     |error               |correct|timing|
+|Sentence                                                                                                                                                                                               |Number of tokens|Output neurons distance     |Error               |Correct|Time|
 |-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------|--------------------|--------------------|-------|------|
 |[CLS] like leon , it 's frustrating and still oddly likable .  [SEP]                                                                                                                                   |16    |0.7829569207192607  |0.2637289847915127  |True   |158   |
 |[CLS] fancy a real downer ?  [SEP]                                                                                                                                                                     |8     |2.078040362538693   |0.10124830653429395 |True   |103   |
