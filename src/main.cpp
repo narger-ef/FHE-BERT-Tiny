@@ -89,8 +89,8 @@ int main(int argc, char *argv[]) {
         } else {
             cout << "positive sentiment!" << endl;
         }
-        system(("python3 ../src/PlainCircuit.py \"" + text + "\"").c_str());
-        system(("python3 ../src/Precision.py \"" + text + "\" " + "\"[" + to_string(plain_result[0]) + ", " +
+        system(("python3 ../src/python/PlainCircuit.py \"" + text + "\"").c_str());
+        system(("python3 ../src/python/Precision.py \"" + text + "\" " + "\"[" + to_string(plain_result[0]) + ", " +
                 to_string(plain_result[1]) + "\" " + to_string(timing)).c_str());
     } else {
         cout << "Outcome: ";
@@ -448,7 +448,7 @@ void setup_environment(int argc, char *argv[]) {
 
         text = "( lawrence bounces ) all over the stage , dancing , running , sweating , mopping his face and generally displaying the wacky talent that brought him fame in the first place . ";
         cout << "\nCLIENT-SIDE\nTokenizing the following sentence: '" << text << "'" << endl;
-        command = "python3 ../src/ExtractEmbeddings.py \"" + text + "\"";
+        command = "python3 ../src/python/ExtractEmbeddings.py \"" + text + "\"";
 
         system(command.c_str());
 
@@ -490,7 +490,7 @@ void setup_environment(int argc, char *argv[]) {
         }
 
         if (verbose) cout << "\nCLIENT-SIDE\nTokenizing the following sentence: '" << text << "'" << endl;
-        command = "python3 ../src/ExtractEmbeddings.py \"" + text + "\"";
+        command = "python3 ../src/python/ExtractEmbeddings.py \"" + text + "\"";
         system(command.c_str());
     }
 
