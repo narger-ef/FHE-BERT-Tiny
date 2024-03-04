@@ -1,4 +1,4 @@
-# FHE-BERT-Tiny
+# Transformer-based Language Models and Homomorphic Encryption: an intersection with BERT-tiny
 <center>
 <img src="imgs/console.png" alt="Console presentation image" width=100% >
 </center>
