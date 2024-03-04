@@ -65,6 +65,7 @@ and the optional `[OPTIONS]` parameters are:
 ## Architecture
 
 The circuit is built to be run by a honest-but-curious server, and it is evaluated according to the following high-level architecture:
+
 <img src="imgs/architecture.png" alt="Console presentation image" width=60% >
 
 Find more details on the paper, currently WIP
