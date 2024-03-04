@@ -46,5 +46,6 @@ Thumbs.db
 /.idea
 /checkpoint
 checkpoint/
+.idea/
 
 src/tmp_embeddings/
