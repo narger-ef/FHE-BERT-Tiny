@@ -49,3 +49,4 @@ checkpoint/
 .idea/
 
 src/tmp_embeddings/
+notebooks/.ipynb_checkpoints/
