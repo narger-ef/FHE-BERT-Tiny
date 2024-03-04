@@ -21,7 +21,7 @@ Plus, since the tokenization process relies on PyTorch:
 ## How to use it
 After intalling all the required prerequisites, install the required Python libraries using pip:
 ```
-pip install -r src/requirements.txt
+pip install -r src/Python/requirements.txt
 ```
 
 Then, it is possible to generate the set of keys for the CKKS scheme. Go to the `build` folder:
