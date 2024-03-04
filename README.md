@@ -1,4 +1,7 @@
 # FHE-BERT-Tiny
+<center>
+<img src="imgs/console.png" alt="Console presentation image" width=85% >
+</center>
 
 This repository contains the source code for the Work-in-Progress paper called *Transformer-based Language Models and Homomorphic Encryption: an intersection with BERT-tiny*. In particular, in contains a FHE-based circuit that implements the Transformer Encoder layers of BERT-tiny (available [here](https://huggingface.co/philschmid/tiny-bert-sst2-distilled)), fine-tuned on the SST-2 dataset.
 
