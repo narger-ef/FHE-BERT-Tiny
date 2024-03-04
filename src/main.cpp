@@ -2,6 +2,9 @@
 #include "FHEController.h"
 #include <chrono>
 
+#define GREEN_TEXT "\033[1;32m"
+#define RED_TEXT "\033[1;31m"
+
 using namespace std::chrono;
 
 enum class Parameters { Generate, Load };
@@ -77,7 +80,7 @@ int main(int argc, char *argv[]) {
     vector<double> plain_result = controller.decrypt_tovector(classified, 2);
 
     int timing = (duration_cast<milliseconds>( high_resolution_clock::now() - start)).count() / 1000.0;
-    cout << endl << "The evaluation of the FHE circuit took: " << timing << " seconds." << endl;
+    if (verbose) cout << endl << "The evaluation of the FHE circuit took: " << timing << " seconds." << endl;
 
     if (plain) {
         cout << "Outcomes:" << endl << "FHE              : ";
@@ -92,9 +95,9 @@ int main(int argc, char *argv[]) {
     } else {
         cout << "Outcome: ";
         if (plain_result[0] > plain_result[1]){
-            cout << "negative sentiment!" << endl;
+            cout << GREEN_TEXT << "negative" << RESET_COLOR << " sentiment!" << endl;
         } else {
-            cout << "positive sentiment!" << endl;
+            cout << GREEN_TEXT << "positive" << RESET_COLOR << " sentiment!" << endl;
         }
     }
 
