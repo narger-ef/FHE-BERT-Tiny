@@ -30,8 +30,35 @@ cd build
 and run the following command:
 
 ```
+./FHE-BERT-Tiny --generate_keys
+```
+
+This generates the required keys to evaluate the circuit. Optionally, it is possible to generate keys satisfying $\lambda = 128$ bits of security by adding the following flag (notice that this will generate a larger ring, leading to larger runtimes).
 
 ```
+./FHE-BERT-Tiny --generate_keys --secure
+```
+
+This command will generate a `keys` folder in the root of the project folder, containing the serializations of the required keys. Now it is possible to run the FHE circuit by using this command
+
+```
+./FHE-BERT-Tiny "Dune part 2 was a mesmerizing experience, movie of the year?"
+```
+
+In general, the circuit can be evaluated as follows (after the generation of the keys):
+
+```
+./FHE-BERT-Tiny <text> [OPTIONS]
+```
+where
+
+- `<text>` is the input text to be evaluated
+
+and the optional `[OPTIONS]` parameters are:
+
+- `--verbose` prints information during the evaluation of the network. It can be useful to study the precision of the circuit at the end of each layer
+- `--plain` adds the result of the plain circuit at the end of the FHE evaluation
+
 
 ## Authors
 
