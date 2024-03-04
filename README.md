@@ -4,11 +4,34 @@ This repository contains the source code for the Work-in-Progress paper called *
 
 ## Prerequisites
 
-WIP
+Linux or Mac operative system
+
+In order to run the program, you need to install:
+- `cmake`
+- `g++` or `clang`
+- `OpenFHE` ([how to install OpenFHE](https://openfhe-development.readthedocs.io/en/latest/sphinx_rsts/intro/installation/installation.html))
+
+Plus, since the tokenization process relies on PyTorch:
+- `python`
+- `pip`
 
 ## How to use it
+After intalling all the required prerequisites, install the required Python libraries using pip:
+```
+pip install -r src/requirements.txt
+```
 
-WIP
+Then, it is possible to generate the set of keys for the CKKS scheme. Go to the `build` folder:
+
+```
+cd build
+```
+
+and run the following command:
+
+```
+
+```
 
 ## Authors
 
