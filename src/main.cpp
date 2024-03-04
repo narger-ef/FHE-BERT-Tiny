@@ -435,6 +435,8 @@ vector<Ctxt> encoder1() {
 }
 
 void setup_environment(int argc, char *argv[]) {
+    string command;
+
     if (IDE_MODE) {
         filesystem::remove_all("../src/tmp_embeddings");
         system("mkdir ../src/tmp_embeddings");
@@ -443,7 +445,7 @@ void setup_environment(int argc, char *argv[]) {
 
         text = "( lawrence bounces ) all over the stage , dancing , running , sweating , mopping his face and generally displaying the wacky talent that brought him fame in the first place . ";
         cout << "\nCLIENT-SIDE\nTokenizing the following sentence: '" << text << "'" << endl;
-        string command = "python3 ../src/ExtractEmbeddings.py \"" + text + "\"";
+        command = "python3 ../src/ExtractEmbeddings.py \"" + text + "\"";
 
         system(command.c_str());
 
@@ -474,9 +476,6 @@ void setup_environment(int argc, char *argv[]) {
         input_folder = "../src/tmp_embeddings/";
 
 
-
-        system(command.c_str());
-
         for (int i = 2; i < argc; i++) {
             if (string(argv[i]) == "--verbose") {
                 verbose = true;
@@ -488,7 +487,8 @@ void setup_environment(int argc, char *argv[]) {
         }
 
         if (verbose) cout << "\nCLIENT-SIDE\nTokenizing the following sentence: '" << text << "'" << endl;
-        string command = "python3 ../src/ExtractEmbeddings.py \"" + text + "\"";
+        command = "python3 ../src/ExtractEmbeddings.py \"" + text + "\"";
+        system(command.c_str());
     }
 
 }

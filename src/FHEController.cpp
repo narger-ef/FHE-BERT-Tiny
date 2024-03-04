@@ -12,9 +12,9 @@ void FHEController::generate_context(bool serialize, bool secure) {
     parameters.SetSecretKeyDist(SPARSE_TERNARY);
     parameters.SetSecurityLevel(lbcrypto::HEStd_128_classic);
     if (!secure) parameters.SetSecurityLevel(lbcrypto::HEStd_NotSet);
-    parameters.SetNumLargeDigits(3); //d_{num} Se lo riduci, aumenti il logQP, se lo aumenti, aumenti memori
+    parameters.SetNumLargeDigits(4); //d_{num} Se lo riduci, aumenti il logQP, se lo aumenti, aumenti memori
     parameters.SetRingDim(1 << 16);
-    parameters.SetRingDim(1 << 15);
+    if (!secure) parameters.SetRingDim(1 << 15);
     parameters.SetBatchSize(num_slots);
 
     level_budget = {3, 3};

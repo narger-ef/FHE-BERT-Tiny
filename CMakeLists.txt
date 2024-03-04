@@ -1,4 +1,4 @@
-project(NewBERT)
+project(FHE-BERT-Tiny)
 
 cmake_minimum_required(VERSION 3.5.1)
 
@@ -38,6 +38,6 @@ find_package(GSL REQUIRED)
 include_directories(${GSL_INCLUDE_DIR})
 
 
-add_executable(NewBERT src/main.cpp src/FHEController.cpp src/FHEController.h src/Utils.h)
+add_executable(FHE-BERT-Tiny src/main.cpp src/FHEController.cpp src/FHEController.h src/Utils.h)
 
 
