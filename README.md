@@ -16,7 +16,7 @@ In order to run the program, you need to install:
 - `g++` or `clang`
 - `OpenFHE` ([how to install OpenFHE](https://openfhe-development.readthedocs.io/en/latest/sphinx_rsts/intro/installation/installation.html))
 
-Plus, since the tokenization process relies on PyTorch:
+Plus, since the tokenization process (done by the client) relies on PyTorch:
 - `python`
 - `pip`
 
