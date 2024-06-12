@@ -3,7 +3,9 @@
 <img src="imgs/console.png" alt="Console presentation image" width=90% >
 </center>
 
-This repository contains the source code for the Work-in-Progress paper called *Transformer-based Language Models and Homomorphic Encryption: an intersection with BERT-tiny*. In particular, in contains a FHE-based circuit that implements the Transformer Encoder layers of BERT-tiny (available [here](https://huggingface.co/philschmid/tiny-bert-sst2-distilled)), fine-tuned on the SST-2 dataset.
+This repository contains the source code for the paper called *Transformer-based Language Models and Homomorphic Encryption: an intersection with BERT-tiny*, available at https://dl.acm.org/doi/10.1145/3643651.3659893
+
+In particular, in contains a FHE-based circuit that implements the Transformer Encoder layers of BERT-tiny (available [here](https://huggingface.co/philschmid/tiny-bert-sst2-distilled)), fine-tuned on the SST-2 dataset.
 
 ## Prerequisites
 
@@ -97,6 +99,29 @@ We present some results, obtained by taking sentences from the validation set of
 |[CLS] verbinski implements every hack-artist trick to give us the ooky-spookies .  [SEP]                                                                                                               |22    |1.0504313965615004  |0.26651379033525724 |True   |184   |
 |[CLS] a romantic comedy enriched by a sharp eye for manners and mores .  [SEP]                                                                                                                         |16    |5.386228984969466   |0.009115561281949822|True   |148   |
 
+## Citing
+
+If you are planning to cite this work, feel free to do using the following BibTeX entry:
+
+```
+@inproceedings{10.1145/3643651.3659893,
+  author = {Rovida, Lorenzo and Leporati, Alberto},
+  title = {Transformer-based Language Models and Homomorphic Encryption: An Intersection with BERT-tiny},
+  year = {2024},
+  isbn = {9798400705564},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  url = {https://doi.org/10.1145/3643651.3659893},
+  doi = {10.1145/3643651.3659893},
+  abstract = {In recent years, emerging and improved Natural Language Processing (NLP) models, such as Bidirectional Encoder Representations from Transformers (BERT), have gained significant attention due to their performance on several natural language tasks. However, inappropriate focus is usually given to the critical problems of security and data privacy, since these models require access to plain data. To address these issues, we suggest a solution based on Fully Homomorphic Encryption (FHE), which allows for computations to be performed on encrypted data. In particular, we propose a FHE-based circuit that, by implementing the smallest existent BERT model, namely BERT-tiny, enables the extraction of encrypted sentences representations and encrypted text classifications. Considering the nature and the depth of this circuit, we used the Cheon-Kim-Kim-Song (CKKS) scheme, along with the bootstrapping operation. We also propose to use precomputations for the Layer Normalization, in order to lighten computations. The experiments, which can be replicated using our open-source code, are conducted on the Stanford Sentiment Treebank (SST-2) dataset. They show that errors introduced by precomputed Layer Normalizaion, approximate FHE operations and polynomial approximations do not produce a significant performance loss.},
+  booktitle = {Proceedings of the 10th ACM International Workshop on Security and Privacy Analytics},
+  pages = {3–13},
+  numpages = {11},
+  keywords = {homomorphic encryption, natural language processing, secure machine learning},
+  location = {<conf-loc>, <city>Porto</city>, <country>Portugal</country>, </conf-loc>},
+  series = {IWSPA '24}
+}
+```
 
 ## Authors
 
