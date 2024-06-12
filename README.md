@@ -70,7 +70,7 @@ The circuit is built to be run by a honest-but-curious server, and it is evaluat
 
 <img src="imgs/architecture.png" alt="Console presentation image" width=60% >
 
-Find more details on the paper, currently WIP
+Find more details on the paper.
 
 ## Some results
 We present some results, obtained by taking sentences from the validation set of SST-2
