@@ -19,7 +19,7 @@ Ctxt pooler(Ctxt input);
 Ctxt classifier(Ctxt input);
 
 //Set to True to test the program on the IDE
-bool IDE_MODE = false;
+bool IDE_MODE = true;
 
 string input_folder;
 
@@ -446,7 +446,7 @@ void setup_environment(int argc, char *argv[]) {
 
         input_folder = "../src/tmp_embeddings/";
 
-        text = "( lawrence bounces ) all over the stage , dancing , running , sweating , mopping his face and generally displaying the wacky talent that brought him fame in the first place . ";
+        text = "This is a bad movie.";
         cout << "\nCLIENT-SIDE\nTokenizing the following sentence: '" << text << "'" << endl;
         command = "python3 ../src/python/ExtractEmbeddings.py \"" + text + "\"";
 
