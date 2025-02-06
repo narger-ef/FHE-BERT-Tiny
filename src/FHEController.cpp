@@ -329,8 +329,8 @@ void FHEController::load_rotation_keys(const string& filename, bool verbose) {
 }
 
 void FHEController::clear_bootstrapping_and_rotation_keys(int bootstrap_num_slots) {
-    FHECKKSRNS* derivedPtr = dynamic_cast<FHECKKSRNS*>(context->GetScheme()->GetFHE().get());
-    derivedPtr->m_bootPrecomMap.erase(bootstrap_num_slots);
+    //FHECKKSRNS* derivedPtr = dynamic_cast<FHECKKSRNS*>(context->GetScheme()->GetFHE().get());
+    //derivedPtr->m_bootPrecomMap.erase(bootstrap_num_slots);
     clear_rotation_keys();
 }
 
